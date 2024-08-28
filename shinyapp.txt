@@ -1,0 +1,123 @@
+
+# Fit the Cox model with the updated factor levels and labels
+cox_model_standard <- coxph(Surv(tpfs, pfs) ~ disease_stage_rsm + 
+                              age_category + kps + recipientcmv + hctcigp + 
+                              dqb1_gvh + drb1_gvh + yeartx + dnrage + 
+                              b_leader + tce, data = data_clean)
+
+# --- Shiny App UI ---
+ui <- fluidPage(
+  titlePanel("PFS Probability"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("b_leader", "B Leader:", 
+                  choices = setNames(names(b_leader_labels), b_leader_labels)),
+      selectInput("drb1_gvh", "DRB1 GVH:", 
+                  choices = setNames(names(drb1_gvh_labels), drb1_gvh_labels)),
+      selectInput("dqb1_gvh", "DQB1 GVH:", 
+                  choices = setNames(names(dqb1_gvh_labels), dqb1_gvh_labels)), 
+      numericInput("dnrage", "Donor Age:", value = 30, min = 0),
+      selectInput("age_category", "Age Category:", 
+                  choices = levels(data_clean$age_category)),
+      selectInput("disease_stage_rsm", "Disease Stage:", 
+                  choices = setNames(names(disease_stage_rsm_labels), disease_stage_rsm_labels)),
+      selectInput("hctcigp", "HCT-CI:", 
+                  choices = setNames(names(hctcigp_labels), hctcigp_labels)),
+      selectInput("kps", "KPS:", 
+                  choices = setNames(names(kps_labels), kps_labels)),
+      selectInput("recipientcmv", "Recipient CMV:", 
+                  choices = setNames(names(recipientcmv_labels), recipientcmv_labels)),
+      selectInput("tce", "DPB1:", 
+                  choices = setNames(names(tce_labels), tce_labels)),
+      actionButton("submit", "Calculate")
+    ),
+    mainPanel(
+      plotOutput("survival_curve"),
+      h4("Predicted PFS Probabilities:"),
+      verbatimTextOutput("prob_12_months"),
+      verbatimTextOutput("prob_24_months"),
+      verbatimTextOutput("prob_36_months"),
+      
+      # Disclaimer
+      p(strong("Disclaimer:"),
+        "This application and the results provided are from preliminary analysis and for model building only. They are not intended for clinical decision-making or any other purpose. Please consult with a qualified healthcare professional for any health-related concerns.")
+    )
+  )
+)
+
+# --- Shiny App Server ---
+server <- function(input, output) {
+  output$survival_curve <- renderPlot({
+    # Create new_data inside reactive expression
+    new_data <- data.frame(
+      b_leader = factor(input$b_leader, levels = names(b_leader_labels), labels = b_leader_labels),
+      drb1_gvh = factor(input$drb1_gvh, levels = names(drb1_gvh_labels), labels = drb1_gvh_labels),
+      dqb1_gvh = factor(input$dqb1_gvh, levels = names(dqb1_gvh_labels), labels = dqb1_gvh_labels),
+      dnrage = input$dnrage,
+      age_category = factor(input$age_category, levels = levels(data_clean$age_category)),
+      disease_stage_rsm = factor(input$disease_stage_rsm, levels = names(disease_stage_rsm_labels), labels = disease_stage_rsm_labels),
+      hctcigp = factor(input$hctcigp, levels = names(hctcigp_labels), labels = hctcigp_labels),
+      kps = factor(input$kps, levels = names(kps_labels), labels = kps_labels),
+      recipientcmv = factor(input$recipientcmv, levels = names(recipientcmv_labels), labels = recipientcmv_labels),
+      tce = factor(input$tce, levels = names(tce_labels), labels = tce_labels),
+      yeartx = data_clean$yeartx[1]  # Set a default value for yeartx
+    )
+    
+    # Input validation (optional but recommended):
+    validate(
+      need(nrow(new_data) > 0, "Please provide all input values."),
+      need(!any(is.na(new_data)), "Input values cannot be missing.")
+    )
+    
+    # Calculate survival probabilities
+    surv_obj <- survfit(cox_model_standard, newdata = new_data)
+    
+    # Generate survival curve
+    ggsurvplot(surv_obj,
+               data = data_clean, 
+               conf.int = TRUE,
+               xlab = "Time (Months)",
+               ylab = "Survival Probability",
+               title = "Predicted Survival Curve"
+    )
+  })
+  
+  # Calculate and display probabilities at specific time points
+  observe({
+    new_data <- data.frame(
+      b_leader = factor(input$b_leader, levels = names(b_leader_labels), labels = b_leader_labels),
+      drb1_gvh = factor(input$drb1_gvh, levels = names(drb1_gvh_labels), labels = drb1_gvh_labels),
+      dqb1_gvh = factor(input$dqb1_gvh, levels = names(dqb1_gvh_labels), labels = dqb1_gvh_labels),
+      dnrage = input$dnrage,
+      age_category = factor(input$age_category, levels = levels(data_clean$age_category)),
+      disease_stage_rsm = factor(input$disease_stage_rsm, levels = names(disease_stage_rsm_labels), labels = disease_stage_rsm_labels),
+      hctcigp = factor(input$hctcigp, levels = names(hctcigp_labels), labels = hctcigp_labels),
+      kps = factor(input$kps, levels = names(kps_labels), labels = kps_labels),
+      recipientcmv = factor(input$recipientcmv, levels = names(recipientcmv_labels), labels = recipientcmv_labels),
+      tce = factor(input$tce, levels = names(tce_labels), labels = tce_labels),
+      yeartx = data_clean$yeartx[1]  # Set a default value for yeartx
+    )
+    
+    # Predicting survival probabilities
+    times <- c(12, 24, 36)
+    surv_summary <- summary(survfit(cox_model_standard, newdata = new_data), times = times)
+    probs <- surv_summary$surv
+    lower_ci <- surv_summary$lower
+    upper_ci <- surv_summary$upper
+    output$prob_12_months <- renderPrint({
+      cat("12 Months:", round(probs[1], 4),
+          " (95% CI:", round(lower_ci[1], 4), "-", round(upper_ci[1], 4), ")")
+    })
+    output$prob_24_months <- renderPrint({
+      cat("24 Months:", round(probs[2], 4),
+          " (95% CI:", round(lower_ci[2], 4), "-", round(upper_ci[2], 4), ")")
+    })
+    output$prob_36_months <- renderPrint({
+      cat("36 Months:", round(probs[3], 4),
+          " (95% CI:", round(lower_ci[3], 4), "-", round(upper_ci[3], 4), ")")
+    })
+  })
+}
+
+# --- Run the App ---
+shinyApp(ui = ui, server = server)
