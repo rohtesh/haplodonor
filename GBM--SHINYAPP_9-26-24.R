@@ -20,6 +20,7 @@ donorcmv_labels <- c("Negative" = 0, "Positive" = 1, "Missing" = 99)
 recipientcmv_labels <- c("Negative" = 0, "Positive" = 1, "Missing" = 99)
 
 rsex_labels <- c("Male" = 1, "Female" = 2)
+condint_labels <- c("MAC" = 1, "RIC/NMA" = 2)
 relative_rsm_labels <- c("Son" = 1, "Daughter" = 2, "Brother" = 3, "Sister" = 4, 
                          "Father" = 5, "Mother" = 6, "Other male rel" = 7, 
                          "Other female rel" = 8, "Missing" = 99)
@@ -34,8 +35,8 @@ ui <- fluidPage(
       selectInput("ragecat_rsm", "Recipient Age:", choices = ragecat_rsm_levels, selected = "30-39"),
       selectInput("rsex", "Recipient Sex:", choices = rsex_labels, selected = 1),
       selectInput("disease_stage_rsm", "Disease/Stage:", choices = disease_stage_rsm_labels, selected = 1),
-      selectInput("hctcigp", "HCT-CI:", choices = c(0, 1), selected = 0),
-      selectInput("condint", "Conditioning:", choices = c(0, 1), selected = 1),
+      selectInput("hctcigp", "HCT-CI:", choices = levels(data$hctcigp)),
+      selectInput("condint", "Conditioning:", choices = condint_labels, selected = 1), 
       selectInput("recipientcmv", "Recipient CMV:", choices = recipientcmv_labels, selected = 1), 
       numericInput("dnrage", "Donor age:", value = 65), 
       selectInput("b_leader", "B Leader:", choices = b_leader_labels, selected = 0),
