@@ -4,20 +4,25 @@ library(gbm)
 
 
 # Define labels for categorical variables
+ragecat_rsm_levels <- c("<=18", "18-29", "30-39", "40-49", "50-59", "60+") 
+hctcigp_levels <- c("0", "1", "2", "3", "4")
+
 b_leader_labels <- c("Match" = 0, "Mismatch" = 1)
 drb1_gvh_labels <- c("Match" = 0, "Mismatch" = 1)
 dqb1_gvh_labels <- c("Match" = 0, "Mismatch" = 1)
 tce_labels <- c("No non-permissive mismatch" = 0, "Non-permissive mismatch" = 1, "Missing" = 99)
 
-disease_stage_rsm_labels <- c("AML CR1" = "1", "AML CR2+" = "2", "AML Relapsed/Refractory" = "3", "ALL CR1" = "4",
-                              "ALL CR2+" = "5", "ALL Relapsed/Refractory" = "6", "MDS Early" = "7", "MDS Advanced" = "8")
+disease_stage_rsm_labels <- c("AML CR1" = "1", "AML CR2+" = "2", "AML Relapsed/Refractory" = "3", 
+                              "ALL CR1" = "4", "ALL CR2+" = "5", "ALL Relapsed/Refractory" = "6", 
+                              "MDS Early" = "7", "MDS Advanced" = "8")
 
 donorcmv_labels <- c("Negative" = 0, "Positive" = 1, "Missing" = 99) 
 recipientcmv_labels <- c("Negative" = 0, "Positive" = 1, "Missing" = 99)
 
 rsex_labels <- c("Male" = 1, "Female" = 2)
-relative_rsm_labels <- c("Son" = 1, "Daughter" = 2, "Brother" = 3, "Sister" = 4, "Father" = 5, "Mother" = 6, "Other male rel" = 7, "Other female rel" = 8, "Missing"=99)
-
+relative_rsm_labels <- c("Son" = 1, "Daughter" = 2, "Brother" = 3, "Sister" = 4, 
+                         "Father" = 5, "Mother" = 6, "Other male rel" = 7, 
+                         "Other female rel" = 8, "Missing" = 99)
 
 
 # Define UI for the app
@@ -26,7 +31,7 @@ ui <- fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      selectInput("ragecat_rsm", "Recipient Age:", choices = c("30-39", "40-49", "50-59", "60-69", "70+"), selected = "30-39"),
+      selectInput("ragecat_rsm", "Recipient Age:", choices = ragecat_rsm_levels, selected = "30-39"),
       selectInput("rsex", "Recipient Sex:", choices = rsex_labels, selected = 1),
       selectInput("disease_stage_rsm", "Disease/Stage:", choices = disease_stage_rsm_labels, selected = 1),
       selectInput("hctcigp", "HCT-CI:", choices = c(0, 1), selected = 0),
