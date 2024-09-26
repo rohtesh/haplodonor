@@ -26,7 +26,7 @@ head(data)
 
 
 
-# Define your features and target
+# Define features and target
 features <- c("ragecat_rsm", "dnrage", "rsex", "donorcmv", "recipientcmv", 
               "relative_rsm", "hctcigp", "b_leader", "drb1_gvh", "dqb1_gvh", "tce", "disease_stage_rsm")
 target <- c("tpfs", "pfs") 
@@ -211,7 +211,7 @@ save(final_gbm_model, n_trees_optimal, file = "final_gbm_model.RData")
 
 #--------------------------------------------------
 
-# Later, load the model
+# Load the model
 load("final_gbm_model.RData")
 
 #--------------------------------------------------
